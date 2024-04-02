@@ -982,3 +982,35 @@ class HAT(nn.Module):
         x = x / self.img_range + self.mean
 
         return x
+
+if __name__ == "__main__":
+    import thop
+    config_dict = {
+        "upscale": 4,
+        "in_chans": 3,
+        "img_size": 64,
+        "window_size": 16,
+        "compress_ratio": 24,
+        "squeeze_factor": 24,
+        "conv_scale": 0.01,
+        "overlap_ratio": 0.5,
+        "img_range": 1.,
+        "depths": [6, 6, 6, 6, 6, 6],
+        "embed_dim": 144,
+        "num_heads": [6, 6, 6, 6, 6, 6],
+        "mlp_ratio": 2,
+        "upsampler": 'pixelshuffle',
+        "resi_connection": '1conv'
+    }
+    
+    netG = HAT(**config_dict)
+    netG = netG.cuda()
+    device = 'cuda:0'
+    input1 = torch.randn(1, 3, 320, 192).to(device)
+    # input2 = torch.randn(1, 3, 320, 180).to(device)
+    macs, params = thop.profile(netG, inputs=(input1))
+    from thop import clever_format
+    macs, params = clever_format([macs, params], "%.3f")
+    print("cal mac and params using thop:")    
+    print(f'flops: {macs}, params: {params}')
+    pass
